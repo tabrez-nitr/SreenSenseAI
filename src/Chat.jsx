@@ -52,19 +52,19 @@ function Chat() {
       const response = await chatSession.current.sendMessageStream({
         message : query,
       })
+      setChatLoading(false)
       let ans = ""
       for await (const chunk of response){
         ans += chunk.text;
         setStreamAnswer(ans)
 
        // 👇 Artificial delay for “typing” effect
-        await new Promise((resolve) => setTimeout(resolve, 30)); // 30ms delay per chunk
+        await new Promise((resolve) => setTimeout(resolve, 100)); // 30ms delay per chunk
       }
       console.log(ans)
       setAnswer(ans)
       setStreamAnswer("")
       setMessages((prev) => [...prev , {id: uuidv4() , role : "model" , parts:[{text : ans}]}])
-      setChatLoading(false)
     }
 
 
@@ -79,20 +79,20 @@ function Chat() {
     {/* chat history  */}
     
       <div className= "flex justify-center">
-        <div className='w-[55vw] max-h-[70vh] mt-10 overflow-y-scroll'>
+        <div className='w-[55vw] max-h-[79vh]  overflow-y-scroll bg-[#1a1a1a]'>
       { messages.map((message) => (
         <div
         key={message.id}>
 
         { message.role === "user" ? ( 
           <div className='flex justify-end mt-1'>
-          <div className='p-4 bg-[#3674B5] text-white rounded-[20px] max-w-[60%] break-words'>
+          <div className='p-4 bg-[#578FCA] text-white rounded-[20px] max-w-[60%] break-words'>
             {message.parts[0].text}
           </div>
         </div> ) :
           (<div className='flex justify-start mt-1'>
             <div
-              className='p-4 text-white rounded-[20px] bg-[#578FCA] max-w-[60%] break-words'
+              className='p-4 text-white mt-1 rounded-[20px] bg-[#3674B5]/80 max-w-[60%] break-words'
               dangerouslySetInnerHTML={{ __html: marked(message.parts[0].text) }}
             ></div>
           </div>)
@@ -104,14 +104,14 @@ function Chat() {
 
 
       {/* Live Gemini Typing */}
-    {/* {streamAnswer && (
+    {streamAnswer && (
       <div className="flex justify-start mt-1">
       <div
-      className="p-4 text-white rounded-[20px] bg-[#578FCA] max-w-[60%] break-words"
+      className="p-4 text-white mt-1 rounded-[20px] bg-[#578FCA] max-w-[60%] break-words"
       dangerouslySetInnerHTML={{ __html: marked(streamAnswer) }}
     ></div>
      </div>
-     )} */}
+     )}
       {chatLoading ? ( <Ripples
                        size="45"
                        speed="2"
@@ -121,9 +121,11 @@ function Chat() {
         </div>
       </div> 
     
+
+
     {/* form for input from user */}
     <div className='flex justify-center'>
-    <form className='fixed bottom-15 w-fit p-3 border-1 rounded-[20px] '
+    <form className='fixed bottom-11 w-fit p-2 border-1 border-white/40 rounded-[20px] '
     onSubmit={(e) => {
       console.log("submit")
       setChatLoading(true);
@@ -133,18 +135,13 @@ function Chat() {
 
       <input type="text" 
       placeholder="Ask ScreenSense"
-      className='p-2 border-none w-[50vw] outline-none text-xl'
+      className='p-1 px-2 border-none text-white/60 w-[50vw] outline-none text-xl'
       value={query}
       onChange={(e)=> setQuery(e.target.value)} />
       <button type="submit" className='px-2 py-1 bg-gray-200 border-1 rounded-[50%]'><i className="ri-arrow-up-line 
         text-2xl"></i></button>
     </form>
     </div>
-    {/* <Ripples
-  size="45"
-  speed="2"
-  color="black" 
-/> */}
     </div>
 
   )
