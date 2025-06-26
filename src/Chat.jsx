@@ -3,6 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 import { marked } from "marked";
 import 'remixicon/fonts/remixicon.css';
 import { v4 as uuidv4 } from 'uuid';
+import { Ripples } from 'ldrs/react'
+import 'ldrs/react/Ripples.css'
 
 
 
@@ -18,6 +20,8 @@ function Chat() {
     const chatSession = useRef(null); // to keep chatsession consistent during re render
     const [loading , setLoading] = useState(true);
     const scrollRef = useRef(null);
+    const [streamAnswer , setStreamAnswer] = useState("")
+    const [chatLoading , setChatLoading] = useState(false);
 
    // to keep chat at bottom for better ux
    useEffect(() => {
@@ -51,10 +55,16 @@ function Chat() {
       let ans = ""
       for await (const chunk of response){
         ans += chunk.text;
+        setStreamAnswer(ans)
+
+       // 👇 Artificial delay for “typing” effect
+        await new Promise((resolve) => setTimeout(resolve, 30)); // 30ms delay per chunk
       }
       console.log(ans)
       setAnswer(ans)
+      setStreamAnswer("")
       setMessages((prev) => [...prev , {id: uuidv4() , role : "model" , parts:[{text : ans}]}])
+      setChatLoading(false)
     }
 
 
@@ -90,19 +100,33 @@ function Chat() {
              
         </div>
       ))}
+
+
+
+      {/* Live Gemini Typing */}
+    {/* {streamAnswer && (
+      <div className="flex justify-start mt-1">
+      <div
+      className="p-4 text-white rounded-[20px] bg-[#578FCA] max-w-[60%] break-words"
+      dangerouslySetInnerHTML={{ __html: marked(streamAnswer) }}
+    ></div>
+     </div>
+     )} */}
+      {chatLoading ? ( <Ripples
+                       size="45"
+                       speed="2"
+                       color="#3674B5" 
+                    />) : (<div></div>)}
       <div ref={scrollRef} />
         </div>
       </div> 
     
-
-
-
-
-    {/* styling ask tab */}
+    {/* form for input from user */}
     <div className='flex justify-center'>
     <form className='fixed bottom-15 w-fit p-3 border-1 rounded-[20px] '
     onSubmit={(e) => {
       console.log("submit")
+      setChatLoading(true);
       e.preventDefault();
       handelSubmit(); 
       }}>
@@ -116,6 +140,11 @@ function Chat() {
         text-2xl"></i></button>
     </form>
     </div>
+    {/* <Ripples
+  size="45"
+  speed="2"
+  color="black" 
+/> */}
     </div>
 
   )
