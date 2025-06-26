@@ -12,6 +12,7 @@
   "dependencies": {
     "@google/genai": "^1.6.0",
     "@tailwindcss/vite": "^4.1.10",
+    "ldrs": "^1.1.7",
     "marked": "^15.0.12",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
