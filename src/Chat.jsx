@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { GoogleGenAI } from "@google/genai";
 import { marked } from "marked";
 import 'remixicon/fonts/remixicon.css';
@@ -15,12 +15,19 @@ function Chat() {
     const apiKey = import.meta.env.VITE_API_KEY;
     const ai = new GoogleGenAI({ apiKey: apiKey });
 
-    const chatSession = useRef(null);
+    const chatSession = useRef(null); // to keep chatsession consistent during re render
     const [loading , setLoading] = useState(true);
+    const scrollRef = useRef(null);
+
+   // to keep chat at bottom for better ux
+   useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
 
-
-
+// setup google chat when it mounts 
   useEffect(()=>{
       console.log("setUp for chat")
       chatSession.current = ai.chats.create({
@@ -32,9 +39,10 @@ function Chat() {
     
 
 
-
+ // handel user query
   const handelSubmit = async() => {
 
+      console.log("indside handel submit")
       setMessages((prev)=> [...prev , { id: uuidv4()  , role : "user", parts:[{text : query}]}])
       setQuery("")
       const response = await chatSession.current.sendMessageStream({
@@ -51,31 +59,41 @@ function Chat() {
 
 
 
-
+    // to load gemini api 
     if(loading)
       return <div className="flex justify-center h-screen items-center text-2xl">ScreenSense AI is Loading...</div>
+
 
   return (
    <div className=''>
     {/* chat history  */}
-    <div className='flex justify-center mt-20'>
-   
+    
+      <div className= "flex justify-center">
+        <div className='w-[55vw] max-h-[70vh] mt-10 overflow-y-scroll'>
       { messages.map((message) => (
         <div
-        key={message.id}
-        className={`p-2  ${ message.role === "user" ?
-           "text-right" : "text-left"
-        }`}>
+        key={message.id}>
 
-        { message.role === "user" ? ( <div>
+        { message.role === "user" ? ( 
+          <div className='flex justify-end mt-1'>
+          <div className='p-4 bg-[#3674B5] text-white rounded-[20px] max-w-[60%] break-words'>
             {message.parts[0].text}
-          </div> ) :
-          ( <div dangerouslySetInnerHTML={{ __html: marked(answer) }}></div>)
+          </div>
+        </div> ) :
+          (<div className='flex justify-start mt-1'>
+            <div
+              className='p-4 text-white rounded-[20px] bg-[#578FCA] max-w-[60%] break-words'
+              dangerouslySetInnerHTML={{ __html: marked(message.parts[0].text) }}
+            ></div>
+          </div>)
           }
              
         </div>
       ))}
-    </div>
+      <div ref={scrollRef} />
+        </div>
+      </div> 
+    
 
 
 
@@ -87,8 +105,8 @@ function Chat() {
       console.log("submit")
       e.preventDefault();
       handelSubmit(); 
-      
-    }}>
+      }}>
+
       <input type="text" 
       placeholder="Ask ScreenSense"
       className='p-2 border-none w-[50vw] outline-none text-xl'
